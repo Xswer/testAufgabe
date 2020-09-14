@@ -1,15 +1,26 @@
-FROM node:alpine
+# Build app
+FROM node:alpine as builder
 
-ENV APP_HOME=/usr/src/app
+COPY package.json package-lock.json ./
 
-WORKDIR $APP_HOME
+RUN npm install && mkdir /app && mv ./node_modules ./app
 
-COPY package*.json $APP_HOME/
-
-RUN npm install
+WORKDIR /app
 
 COPY . .
 
-CMD ["npm", "start"]
-# CMD ["npm", "run", "debug"]
-# CMD ["npm", "run", "build:start"]
+RUN npm run build
+
+
+# Host app
+FROM nginx:alpine
+
+COPY ./nginx.conf /etc/nginx/nginx.conf
+
+RUN rm -rf /usr/share/nginx/html/*
+
+COPY --from=builder /app/build /usr/share/nginx/html
+
+EXPOSE 3000
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]

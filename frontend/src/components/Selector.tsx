@@ -1,24 +1,20 @@
 import React from 'react';
-import { useQuery } from '@apollo/react-hooks';
+
 import { DISTINCT_FIELD, GET_AP } from '../queries/Queries';
-import DropDown from './DropDown';
+import { DropDown } from './DropDown';
 
 interface Ap {
   vorname: string;
   nachname: string;
 }
 
-interface Selectable {
+export interface Selectable {
   label: string;
   value: string;
 }
 
 interface Props {}
 interface State {
-  titleOptions: Selectable[];
-  stadtOptions: Selectable[];
-  plzOptions: Selectable[];
-  apOptions: Selectable[];
   title: string;
   stadt: string;
   plz: string;
@@ -29,10 +25,6 @@ export default class Selector extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      titleOptions: [],
-      stadtOptions: [],
-      plzOptions: [],
-      apOptions: [],
       title: '',
       stadt: '',
       plz: '',
@@ -40,105 +32,102 @@ export default class Selector extends React.Component<Props, State> {
     };
   }
 
-  convertToSelectable(el: string): Selectable {
-    return { label: el, value: el };
-  }
-
-  setTitle(value: string) {
-    const getStadtOptions = useQuery(DISTINCT_FIELD, {
-      variables: { field: 'stadt', title: value },
-    });
+  setTitle = (value: string) => {
     this.setState({
       ...this.state,
       title: value,
-      stadtOptions: getStadtOptions.data.distinct.map(this.convertToSelectable),
       stadt: '',
       plz: '',
-      apOptions: [],
+      ap: '',
     });
-  }
+  };
 
-  setStadt(value: string) {
-    const { title } = this.state;
-    const getPlzOptions = useQuery(DISTINCT_FIELD, {
-      variables: { field: 'plz', title, stadt: value },
-    });
+  setStadt = (value: string) => {
     this.setState({
       ...this.state,
-      plzOptions: getPlzOptions.data.distinct.map(this.convertToSelectable),
       stadt: value,
       plz: '',
-      apOptions: [],
+      ap: '',
     });
-  }
+  };
 
-  setPlz(value: string) {
-    const { title, stadt } = this.state;
-    const getApOptions = useQuery(GET_AP, {
-      variables: { title, stadt, plz: value },
-    });
+  setPlz = (value: string) => {
     this.setState({
       ...this.state,
       plz: value,
-      apOptions: getApOptions.data.firma.map((el: { ap: Ap }) =>
-        this.convertToSelectable(`${el.ap.vorname} ${el.ap.nachname}`),
-      ),
+      ap: '',
     });
-  }
+  };
 
-  setAp(value: string) {
+  setAp = (value: string) => {
     this.setState({
       ...this.state,
       ap: value,
     });
-  }
+  };
 
-  async componentDidMount() {
-    const getTitleOptions = useQuery(DISTINCT_FIELD, {
-      variables: { field: 'title' },
-    });
-    this.setState({
-      ...this.state,
-      titleOptions: getTitleOptions.data.distinct,
-    });
-  }
+  convertToSelectableString = (el: string): Selectable | null => {
+    if (!el) return null;
+    return { label: el, value: el };
+  };
+
+  convertToSelectableAp = (el: Ap): Selectable | null => {
+    if (!el) return null;
+    const vorNachName = `${el.vorname} ${el.nachname}`;
+    return {
+      label: vorNachName,
+      value: vorNachName,
+    };
+  };
 
   render() {
-    const {
-      titleOptions,
-      stadtOptions,
-      plzOptions,
-      apOptions,
-      ap,
-    } = this.state;
+    const { title, stadt, plz, ap } = this.state;
     return (
       <div>
-        {titleOptions ? (
-          <DropDown
-            name="Title"
-            options={titleOptions}
-            setSelected={this.setTitle}
-          />
-        ) : null}
+        <DropDown
+          name="Title"
+          value={title}
+          query={DISTINCT_FIELD}
+          path="distinct"
+          convertToSelectable={this.convertToSelectableString}
+          variables={{ field: 'title' }}
+          setSelected={this.setTitle}
+        />
 
-        {stadtOptions ? (
+        {title ? (
           <DropDown
             name="Stadt"
-            options={stadtOptions}
-            setSelected={this.setTitle}
+            value={stadt}
+            query={DISTINCT_FIELD}
+            path="distinct"
+            convertToSelectable={this.convertToSelectableString}
+            variables={{ field: 'stadt', title }}
+            setSelected={this.setStadt}
           />
         ) : null}
 
-        {plzOptions ? (
+        {stadt ? (
           <DropDown
             name="Plz"
-            options={plzOptions}
-            setSelected={this.setTitle}
+            value={plz}
+            query={DISTINCT_FIELD}
+            path="distinct"
+            convertToSelectable={this.convertToSelectableString}
+            variables={{ field: 'plz', title, stadt }}
+            setSelected={this.setPlz}
           />
         ) : null}
 
-        {apOptions ? (
-          <DropDown name="Ap" options={apOptions} setSelected={this.setTitle} />
+        {plz ? (
+          <DropDown
+            name="Ap"
+            value={ap}
+            query={GET_AP}
+            path="firma[0].ap"
+            convertToSelectable={this.convertToSelectableAp}
+            variables={{ title, stadt, plz }}
+            setSelected={this.setAp}
+          />
         ) : null}
 
         {ap ? <h1>{ap}</h1> : null}

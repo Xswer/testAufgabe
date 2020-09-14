@@ -1,43 +1,55 @@
-import { DocumentNode } from '@apollo/react-hooks';
-import React from 'react';
+import { useQuery, DocumentNode } from '@apollo/client';
+import React, { useEffect, useState } from 'react';
 import Select, { ValueType } from 'react-select';
+import _ from 'lodash';
+import { Selectable } from './Selector';
 
 interface Props {
   name: string;
-  options: { label: string; value: string }[];
-  setSelected(value: string): void;
+  value: string;
   query: DocumentNode;
+  path: string;
   variables: {
     [key: string]: any;
   };
+  setSelected(value: string): void;
+  convertToSelectable(el: any): Selectable | null;
 }
 
-interface State {}
-
-export default class DropDown extends React.Component<Props, State> {
-  onChange = (
+export function DropDown(props: Props) {
+  const onChange = (
     res: ValueType<{
       label: string;
       value: string;
     }>,
   ) => {
-    console.log(res!);
-    this.props.setSelected('123');
-    this.setState({});
+    // @ts-ignore
+    const { label } = res as Selectable;
+    props.setSelected(label);
   };
 
-  render() {
-    const { options } = this.props;
-    const { onChange } = this;
+  const getOptions = useQuery(props.query, {
+    variables: props.variables,
+  });
 
-    return (
-      <Select
-        name={this.props.name}
-        onChange={onChange}
-        options={options}
-        className="basic-multi-select"
-        classNamePrefix="select"
-      />
-    );
-  }
+  const { loading, error, data } = getOptions;
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error :(</p>;
+
+  const options = _.get(data, props.path)?.map(props.convertToSelectable);
+
+  return (
+    <Select
+      name={props.name}
+      value={{
+        label: props.value || props.name,
+        value: props.value || props.name,
+      }}
+      onChange={onChange}
+      options={options}
+      className="basic-multi-select"
+      classNamePrefix="select"
+    />
+  );
 }

@@ -13,8 +13,8 @@ services:
     restart: always
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/usr/src/app
+    # volumes:
+    #   - ./frontend:/usr/src/app
     ports:
       - '3000'
     stdin_open: true
@@ -23,8 +23,8 @@ services:
     restart: always
     depends_on:
       - mongo
-    volumes:
-      - ./backend:/usr/src/app
+    # volumes:
+    #   - ./backend:/usr/src/app
     environment:
       - MONGO_URI=mongodb://mongo:27017/ajando
       - PORT=3000

@@ -4,7 +4,7 @@ const ApType = new GraphQLObjectType({
   name: 'Ap',
   fields: () => ({
     vorname: { type: GraphQLString },
-    name: { type: GraphQLString },
+    nachname: { type: GraphQLString },
   }),
 });
 

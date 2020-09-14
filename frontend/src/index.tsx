@@ -4,8 +4,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-import { ApolloProvider } from 'react-apollo';
-import client from './apollo';
+import { ApolloProvider } from '@apollo/react-hooks';
+import client from './lib/ApolloClient';
 
 ReactDOM.render(
   <React.StrictMode>

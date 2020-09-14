@@ -16,7 +16,7 @@ const FirmaType = new GraphQLObjectType({
     title: { type: GraphQLString },
     stadt: { type: GraphQLString },
     plz: { type: GraphQLString },
-    ap: { type: ApType },
+    ap: { type: new GraphQLList(ApType) },
   }),
 });
 
@@ -32,7 +32,8 @@ const RootQuery = new GraphQLObjectType({
         plz: { type: GraphQLString },
       },
       async resolve(parent, args) {
-        return await Firma.find(args);
+        const res = await Firma.find(args);
+        return res;
       },
     },
     distinct: {

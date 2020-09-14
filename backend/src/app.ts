@@ -7,8 +7,9 @@ import { graphqlHTTP } from 'express-graphql';
 import { firmaSchema } from './gqlSchema/firmaSchema';
 const app = express();
 
+app.use(express.json());
 app.use(async (req, res, next) => {
-  console.log(req.method, req.url);
+  console.log(req.method, req.url, '\n', req.body);
   await next();
 });
 
